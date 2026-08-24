@@ -39,9 +39,10 @@ function AccountActions() {
   );
 }
 
-function PrimaryNavigation() {
+function Header() {
   return (
-    <div className={styles.pillNavContainer}>
+    <header className={styles.header}>
+      <Link className={styles.navBrand} to="/messages">UI SSO Message Board</Link>
       <nav className={styles.pillNav} aria-label="Primary navigation">
         <NavLink to="/messages" className={({ isActive }) => `${styles.pillItem} ${isActive ? styles.pillItemActive : ''}`}>
           Messages
@@ -50,7 +51,8 @@ function PrimaryNavigation() {
           Users
         </NavLink>
       </nav>
-    </div>
+      <AccountActions />
+    </header>
   );
 }
 
@@ -256,8 +258,7 @@ function MePage() {
 function AppLayout() {
   return (
     <>
-      <AccountActions />
-      <PrimaryNavigation />
+      <Header />
       <Routes>
         <Route path="/" element={<Navigate to="/messages" replace />} />
         <Route path="/messages" element={<MessagesPage />} />
