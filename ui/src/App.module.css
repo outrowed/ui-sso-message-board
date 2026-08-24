@@ -25,6 +25,56 @@
   text-decoration: underline;
 }
 
+.accountActions {
+  min-height: 68px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 12px 24px 0;
+  font-size: 0.95em;
+}
+
+/* Pill Navigation */
+.pillNavContainer {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+  margin-bottom: 30px;
+}
+
+.pillNav {
+  display: inline-flex;
+  background: #eaeaea;
+  padding: 4px;
+  border-radius: 30px;
+  position: relative;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.pillItem {
+  padding: 10px 24px;
+  border-radius: 26px;
+  font-weight: 600;
+  font-size: 0.95em;
+  color: #555;
+  text-decoration: none !important;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-block;
+  text-align: center;
+  border: none;
+  background: transparent;
+}
+
+.pillItemActive {
+  background: #0066cc;
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(0, 102, 204, 0.25);
+}
+
 .btn {
   display: inline-block;
   padding: 8px 16px;

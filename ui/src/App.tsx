@@ -1,109 +1,138 @@
 import React, { useEffect, useState } from 'react';
+import { BrowserRouter, Link, Navigate, NavLink, Route, Routes, useParams } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext.tsx';
 import styles from './App.module.css';
 
-type Profile = { username: string; fullname: string; interests?: string | null; likes?: string | null; dislikes?: string | null; instagram?: string | null; twitter?: string | null; youtube?: string | null };
-type Post = { id: number; content: string; createdAt: string; authorUsername: string; authorFullname: string };
+type Profile = {
+  username: string;
+  fullname: string;
+  interests?: string | null;
+  likes?: string | null;
+  dislikes?: string | null;
+  instagram?: string | null;
+  twitter?: string | null;
+  youtube?: string | null;
+};
 
-function Nav({ go }: { go: (path: string) => void }) {
+type Message = {
+  id: number;
+  content: string;
+  createdAt: string;
+  authorUsername: string;
+  authorFullname: string;
+};
+
+function AccountActions() {
   const { user, login, logout } = useAuth();
-  return (
-    <nav className={styles.nav}>
-      <a className={styles.navBrand} href="/" onClick={(e) => { e.preventDefault(); go('/'); }}>
-        UI Message Board & Directory
-      </a>
-      <span>
-        {user ? (
-          <>
-            <a href="/me" onClick={(e) => { e.preventDefault(); go('/me'); }}>{user.fullname}</a>{' · '}
-            <button className={`${styles.btn} ${styles.btnSecondary}`} onClick={logout}>Logout</button>
-          </>
-        ) : (
-          <button className={`${styles.btn} ${styles.btnWarn}`} onClick={login}>Login via SSO UI</button>
-        )}
-      </span>
-    </nav>
-  );
-}
-
-function Directory({ go }: { go: (path: string) => void }) {
-  const [q, setQ] = useState(''); 
-  const [profiles, setProfiles] = useState<Profile[]>([]);
-
-  const load = (query = '') => fetch(`/api/profiles/directory?q=${encodeURIComponent(query)}`).then(r => r.json()).then(d => setProfiles(d.profiles));
-  useEffect(() => { load(); }, []);
 
   return (
-    <div className={styles.container}>
-      <h1>Student Directory</h1>
-      <p className={styles.description}>Public profiles created by SSO UI-authenticated users.</p>
-      
-      <form className={styles.searchBar} onSubmit={(e) => { e.preventDefault(); load(q); }}>
-        <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search name, NPM, or interest..."/>
-        <button className={`${styles.btn} ${styles.btnPrimary}`}>Search</button>
-      </form>
-
-      {profiles.length ? profiles.map(p => (
-        <article className={`${styles.card} ${styles.profileCard}`} key={p.username}>
-          <h2>
-            <a href={`/profile/${encodeURIComponent(p.username)}`} onClick={e => {e.preventDefault(); go(`/profile/${p.username}`)}}>
-              {p.fullname}
-            </a>
-          </h2>
-          <p>@{p.username}</p>
-          {p.interests && <p><strong>Interests:</strong> {p.interests}</p>}
-        </article>
-      )) : <p>No profiles found.</p>}
+    <div className={styles.accountActions}>
+      {user ? (
+        <>
+          <Link to="/me">{user.fullname}</Link>
+          <button className={`${styles.btn} ${styles.btnSecondary}`} onClick={logout}>Logout</button>
+        </>
+      ) : (
+        <button className={`${styles.btn} ${styles.btnWarn}`} onClick={login}>Login via SSO UI</button>
+      )}
     </div>
   );
 }
 
-function MessageBoard({ go }: { go: (path: string) => void }) {
+function PrimaryNavigation() {
+  return (
+    <div className={styles.pillNavContainer}>
+      <nav className={styles.pillNav} aria-label="Primary navigation">
+        <NavLink to="/messages" className={({ isActive }) => `${styles.pillItem} ${isActive ? styles.pillItemActive : ''}`}>
+          Messages
+        </NavLink>
+        <NavLink to="/users" className={({ isActive }) => `${styles.pillItem} ${isActive ? styles.pillItemActive : ''}`}>
+          Users
+        </NavLink>
+      </nav>
+    </div>
+  );
+}
+
+function UsersPage() {
+  const [query, setQuery] = useState('');
+  const [users, setUsers] = useState<Profile[]>([]);
+
+  const load = (value = '') => fetch(`/api/users?q=${encodeURIComponent(value)}`)
+    .then((response) => response.json())
+    .then((data) => setUsers(data.users));
+
+  useEffect(() => { void load(); }, []);
+
+  return (
+    <main className={styles.container}>
+      <h1>Users</h1>
+      <p className={styles.description}>Public profiles created by SSO UI-authenticated users.</p>
+
+      <form className={styles.searchBar} onSubmit={(event) => { event.preventDefault(); void load(query); }}>
+        <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search name, username, or interest…" />
+        <button className={`${styles.btn} ${styles.btnPrimary}`}>Search</button>
+      </form>
+
+      {users.length ? users.map((user) => (
+        <article className={`${styles.card} ${styles.profileCard}`} key={user.username}>
+          <h2><Link to={`/profile/${encodeURIComponent(user.username)}`}>{user.fullname}</Link></h2>
+          <p>@{user.username}</p>
+          {user.interests && <p><strong>Interests:</strong> {user.interests}</p>}
+        </article>
+      )) : <p>No users found.</p>}
+    </main>
+  );
+}
+
+function MessagesPage() {
   const { user, login } = useAuth();
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [content, setContent] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const load = () => fetch('/api/posts').then(r => r.json()).then(d => setPosts(d.posts));
-  useEffect(() => { load(); }, []);
+  const load = () => fetch('/api/messages')
+    .then((response) => response.json())
+    .then((data) => setMessages(data.messages));
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => { void load(); }, []);
+
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
     if (!content.trim()) return;
-    setLoading(true);
-    await fetch('/api/posts', {
+
+    setSubmitting(true);
+    const response = await fetch('/api/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content: content.trim() })
+      body: JSON.stringify({ content: content.trim() }),
     });
-    setContent('');
-    setLoading(false);
-    load();
+
+    if (response.ok) {
+      setContent('');
+      await load();
+    }
+    setSubmitting(false);
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.directoryLink}>
-        <a href="/directory" onClick={(e) => { e.preventDefault(); go('/directory'); }}>
-          🔍 Browse Student Directory
-        </a>
-      </div>
-
-      <h2 className={styles.boardTitle}>Public Message Board</h2>
+    <main className={styles.container}>
+      <h1 className={styles.boardTitle}>Messages</h1>
 
       {user ? (
         <form className={styles.postInputCard} onSubmit={submit}>
-          <textarea 
-            className={styles.postTextarea} 
-            rows={3} 
-            placeholder="Share something with the campus..."
+          <textarea
+            className={styles.postTextarea}
+            rows={3}
+            maxLength={1000}
+            placeholder="Share something with the campus…"
             value={content}
-            onChange={(e) => setContent(e.target.value)}
-            disabled={loading}
+            onChange={(event) => setContent(event.target.value)}
+            disabled={submitting}
           />
           <div className={styles.alignRight}>
-            <button className={`${styles.btn} ${styles.btnPrimary}`} disabled={loading || !content.trim()}>
-              {loading ? 'Posting...' : 'Post Message'}
+            <button className={`${styles.btn} ${styles.btnPrimary}`} disabled={submitting || !content.trim()}>
+              {submitting ? 'Posting…' : 'Post message'}
             </button>
           </div>
         </form>
@@ -114,153 +143,133 @@ function MessageBoard({ go }: { go: (path: string) => void }) {
         </div>
       )}
 
-      <div>
-        {posts.length ? posts.map(post => (
-          <article className={styles.postCard} key={post.id}>
-            <div className={styles.postHeader}>
-              <span className={styles.postAuthor}>
-                <a href={`/profile/${encodeURIComponent(post.authorUsername)}`} onClick={(e) => { e.preventDefault(); go(`/profile/${post.authorUsername}`); }}>
-                  {post.authorFullname}
-                </a>
-              </span>
-              <span>{new Date(post.createdAt).toLocaleString('en-GB')}</span>
-            </div>
-            <div className={styles.postContent}>{post.content}</div>
-          </article>
-        )) : <p>No messages yet. Be the first to post!</p>}
-      </div>
-    </div>
+      {messages.length ? messages.map((message) => (
+        <article className={styles.postCard} key={message.id}>
+          <div className={styles.postHeader}>
+            <Link className={styles.postAuthor} to={`/profile/${encodeURIComponent(message.authorUsername)}`}>
+              {message.authorFullname}
+            </Link>
+            <time>{new Date(message.createdAt).toLocaleString('en-GB')}</time>
+          </div>
+          <div className={styles.postContent}>{message.content}</div>
+        </article>
+      )) : <p>No messages yet. Be the first to post.</p>}
+    </main>
   );
 }
 
-function PublicProfile({ username, go }: { username: string; go: (path: string) => void }) {
-  const [p, setP] = useState<Profile | null>(null); 
+function ProfilePage() {
+  const { username = '' } = useParams();
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [missing, setMissing] = useState(false);
-  
-  useEffect(() => { 
-    fetch(`/api/profiles/${encodeURIComponent(username)}`)
-      .then(r => r.ok ? r.json() : Promise.reject())
-      .then(d => setP(d.profile))
-      .catch(() => setMissing(true)); 
+
+  useEffect(() => {
+    fetch(`/api/users/${encodeURIComponent(username)}`)
+      .then((response) => response.ok ? response.json() : Promise.reject())
+      .then((data) => setProfile(data.user))
+      .catch(() => setMissing(true));
   }, [username]);
 
-  if (missing) return <div className={styles.container}><p>Profile not found.</p></div>; 
-  if (!p) return <div className={styles.container}>Loading…</div>;
-  
-  const social = (label: string, handle?: string | null, base?: string) => handle ? <p><strong>{label}:</strong> {base ? <a target="_blank" href={`${base}${handle.replace('@','')}`}>{handle}</a> : handle}</p> : null;
-  
+  if (missing) return <main className={styles.container}><p>User not found.</p></main>;
+  if (!profile) return <main className={styles.container}>Loading…</main>;
+
+  const social = (label: string, handle?: string | null, base?: string) => handle ? (
+    <p><strong>{label}:</strong> {base ? <a target="_blank" rel="noreferrer" href={`${base}${handle.replace('@', '')}`}>{handle}</a> : handle}</p>
+  ) : null;
+
   return (
-    <div className={styles.container}>
-      <p className={styles.backLink}>
-        <a href="/" onClick={e => {e.preventDefault(); go('/')}}>← Back to Message Board</a>
-      </p>
+    <main className={styles.container}>
+      <p className={styles.backLink}><Link to="/users">← Back to users</Link></p>
       <article className={styles.card}>
-        <h1 style={{marginTop: 0, marginBottom: 5}}>{p.fullname}</h1>
-        <p className={styles.muted}>@{p.username}</p>
-        
-        <div className={styles.formGroup}>
-          <strong className={styles.infoLabel}>Interests</strong>
-          <div>{p.interests || <em>Not specified</em>}</div>
-        </div>
-        
-        <div className={styles.formGroup}>
-          <strong className={styles.infoLabel}>Likes</strong>
-          <div>{p.likes || <em>Not specified</em>}</div>
-        </div>
-        
-        <div className={styles.formGroup}>
-          <strong className={styles.infoLabel}>Dislikes</strong>
-          <div>{p.dislikes || <em>Not specified</em>}</div>
-        </div>
-        
-        <h3 className={styles.socialTitle}>Social Media</h3>
-        {social('Instagram', p.instagram, 'https://instagram.com/')}
-        {social('Twitter/X', p.twitter, 'https://twitter.com/')}
-        {social('YouTube', p.youtube)}
-        {!p.instagram && !p.twitter && !p.youtube && <p><em>No social media linked.</em></p>}
+        <h1>{profile.fullname}</h1>
+        <p className={styles.muted}>@{profile.username}</p>
+        <div className={styles.formGroup}><strong className={styles.infoLabel}>Interests</strong><div>{profile.interests || <em>Not specified</em>}</div></div>
+        <div className={styles.formGroup}><strong className={styles.infoLabel}>Likes</strong><div>{profile.likes || <em>Not specified</em>}</div></div>
+        <div className={styles.formGroup}><strong className={styles.infoLabel}>Dislikes</strong><div>{profile.dislikes || <em>Not specified</em>}</div></div>
+        <h3 className={styles.socialTitle}>Social media</h3>
+        {social('Instagram', profile.instagram, 'https://instagram.com/')}
+        {social('Twitter/X', profile.twitter, 'https://twitter.com/')}
+        {social('YouTube', profile.youtube)}
+        {!profile.instagram && !profile.twitter && !profile.youtube && <p><em>No social media linked.</em></p>}
       </article>
-    </div>
+    </main>
   );
 }
 
-function MyProfile() {
-  const { user, login, loading } = useAuth(); 
-  const [p, setP] = useState<Profile | null>(null); 
+function MePage() {
+  const { user, login, loading } = useAuth();
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [saved, setSaved] = useState(false);
- 
-  useEffect(() => { 
-    if(user) fetch(`/api/profiles/${encodeURIComponent(user.username)}`).then(r=>r.json()).then(d=>setP(d.profile)); 
+
+  useEffect(() => {
+    if (user) fetch(`/api/users/${encodeURIComponent(user.username)}`).then((response) => response.json()).then((data) => setProfile(data.user));
   }, [user]);
 
-  if(loading) return <div className={styles.container}>Loading…</div>; 
-  if(!user) return (
-    <div className={`${styles.container} ${styles.centerMessage}`}>
+  if (loading) return <main className={styles.container}>Loading…</main>;
+  if (!user) return (
+    <main className={`${styles.container} ${styles.centerMessage}`}>
       <h1>Sign in required</h1>
-      <p className={styles.bottomGap}>Use your SSO UI account to create or edit your profile.</p>
+      <p className={styles.bottomGap}>Use your SSO UI account to edit your profile.</p>
       <button className={`${styles.btn} ${styles.btnWarn}`} onClick={login}>Login via SSO UI</button>
-    </div>
-  ); 
-  if(!p) return <div className={styles.container}>Loading…</div>;
- 
-  const submit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); 
-    const fields = Object.fromEntries(new FormData(e.currentTarget)); 
-    fetch('/api/profiles/me',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(fields)})
-      .then(r=>r.json()).then(d=>{setP(d.profile); setSaved(true); setTimeout(() => setSaved(false), 3000); });
+    </main>
+  );
+  if (!profile) return <main className={styles.container}>Loading…</main>;
+
+  const submit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const fields = Object.fromEntries(new FormData(event.currentTarget));
+    fetch('/api/users/me', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(fields) })
+      .then((response) => response.json())
+      .then((data) => {
+        setProfile(data.user);
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+      });
   };
- 
-  const field = (name: keyof Profile, label: string, area = false) => (
+
+  const field = (name: keyof Profile, label: string, multiline = false) => (
     <div className={styles.formGroup}>
       <label>{label}</label>
-      {area ? <textarea name={name} defaultValue={p[name] || ''} rows={3}/> : <input type="text" name={name} defaultValue={p[name] || ''}/>}
+      {multiline ? <textarea name={name} defaultValue={profile[name] || ''} rows={3} /> : <input name={name} defaultValue={profile[name] || ''} />}
     </div>
   );
 
   return (
-    <div className={styles.container}>
-      <h1>My Profile</h1>
-      {saved && <p className={styles.saved}>✓ Profile saved successfully.</p>}
+    <main className={styles.container}>
+      <h1>My profile</h1>
+      {saved && <p className={styles.saved}>✓ Profile saved.</p>}
       <form onSubmit={submit} className={styles.card}>
-        {field('fullname', 'Full Name')}
-        {field('interests', 'Interests (comma separated)')}
+        {field('fullname', 'Full name')}
+        {field('interests', 'Interests')}
         {field('likes', 'Likes', true)}
         {field('dislikes', 'Dislikes', true)}
-        <h3 className={styles.sectionTitle}>Social Media</h3>
-        {field('instagram', 'Instagram Username')}
-        {field('twitter', 'Twitter/X Username')}
-        {field('youtube', 'YouTube Channel Handle')}
-        <div className={styles.saveButton}>
-          <button className={`${styles.btn} ${styles.btnPrimary}`}>Save Profile</button>
-        </div>
+        <h3 className={styles.sectionTitle}>Social media</h3>
+        {field('instagram', 'Instagram username')}
+        {field('twitter', 'Twitter/X username')}
+        {field('youtube', 'YouTube handle')}
+        <div className={styles.saveButton}><button className={`${styles.btn} ${styles.btnPrimary}`}>Save profile</button></div>
       </form>
-    </div>
+    </main>
   );
 }
 
-function Shell() { 
-  const [path, setPath] = useState(location.pathname); 
-  const go = (next: string) => { history.pushState({}, '', next); setPath(next); }; 
-  
-  useEffect(() => {
-    const h = () => setPath(location.pathname);
-    addEventListener('popstate', h);
-    return () => removeEventListener('popstate', h);
-  }, []); 
-
-  const view = 
-    path === '/me' ? <MyProfile /> : 
-    path === '/directory' ? <Directory go={go} /> : 
-    path.startsWith('/profile/') ? <PublicProfile username={decodeURIComponent(path.slice(9))} go={go}/> : 
-    <MessageBoard go={go} />; 
-
+function AppLayout() {
   return (
     <>
-      <Nav go={go}/>
-      {view}
+      <AccountActions />
+      <PrimaryNavigation />
+      <Routes>
+        <Route path="/" element={<Navigate to="/messages" replace />} />
+        <Route path="/messages" element={<MessagesPage />} />
+        <Route path="/users" element={<UsersPage />} />
+        <Route path="/profile/:username" element={<ProfilePage />} />
+        <Route path="/me" element={<MePage />} />
+        <Route path="*" element={<Navigate to="/messages" replace />} />
+      </Routes>
     </>
-  ); 
+  );
 }
 
-export default function App() { 
-  return <AuthProvider><Shell/></AuthProvider>; 
+export default function App() {
+  return <BrowserRouter><AuthProvider><AppLayout /></AuthProvider></BrowserRouter>;
 }
