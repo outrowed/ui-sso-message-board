@@ -22,6 +22,36 @@ ui-sso-message-board/
 
 The UI development server forwards `/api` requests to the core server. The core server owns authentication, authorization, and database access; browser code never reads the JWT secret or SQLite file.
 
+## Technology stack
+
+### Common (frontend + backend)
+
+- **TypeScript** for both UI and core code
+- **pnpm workspaces** for monorepo dependency and script management
+
+### External services
+
+- **Universitas Indonesia SSO UI** as the external identity provider
+- **CAS 2.0** for login, ticket validation, and single logout
+
+### Frontend
+
+- **React 19** for the user interface
+- **React Router** for `/messages`, `/users`, `/profile/:username`, and `/me`
+- **CSS Modules** for component-scoped styling
+- **Vite** for the development server and production bundle
+
+### Backend
+
+- **Node.js 22** as the core runtime
+- **Express 5** for the HTTP API
+- **JSON Web Tokens** stored in HTTP-only cookies for application sessions
+
+### Database
+
+- **Drizzle ORM** for typed queries and schema definitions
+- **SQLite** through Node.js's built-in `node:sqlite` driver
+
 ## Requirements
 
 - Node.js 22 or newer, for the built-in `node:sqlite` module
