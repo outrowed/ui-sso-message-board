@@ -29,7 +29,8 @@ router.get("/directory", async (req: Request, res: Response) => {
 
 // GET /api/profiles/:username - Public single profile
 router.get("/:username", async (req: Request, res: Response) => {
-  const [profile] = await db.select().from(profiles).where(eq(profiles.username, req.params.username));
+  const username = Array.isArray(req.params.username) ? req.params.username[0] : req.params.username;
+  const [profile] = await db.select().from(profiles).where(eq(profiles.username, username));
   if (!profile) {
     return res.status(404).json({ error: "Profile not found" });
   }
