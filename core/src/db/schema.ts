@@ -13,7 +13,7 @@ export const profiles = sqliteTable("profiles", {
   updatedAt: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
-export const posts = sqliteTable("posts", {
+export const messages = sqliteTable("messages", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   authorUsername: text("author_username").notNull().references(() => profiles.username),
   content: text("content").notNull(),

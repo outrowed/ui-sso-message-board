@@ -8,6 +8,11 @@ const dataDirectory = resolve(import.meta.dirname, "../../../db");
 mkdirSync(dataDirectory, { recursive: true });
 
 const sqlite = new DatabaseSync(resolve(dataDirectory, "profiles.sqlite"));
+
+const hasLegacyPosts = sqlite.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'posts'").get();
+const hasMessages = sqlite.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'messages'").get();
+if (hasLegacyPosts && !hasMessages) sqlite.exec("ALTER TABLE posts RENAME TO messages");
+
 sqlite.exec(`
   CREATE TABLE IF NOT EXISTS profiles (
     username TEXT PRIMARY KEY,
@@ -21,7 +26,7 @@ sqlite.exec(`
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP
   );
 
-  CREATE TABLE IF NOT EXISTS posts (
+  CREATE TABLE IF NOT EXISTS messages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     author_username TEXT NOT NULL,
     content TEXT NOT NULL,
