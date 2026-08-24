@@ -1,0 +1,9 @@
+packages:
+  - "ui"
+  - "core"
+
+allowBuilds:
+  esbuild: true
+
+onlyBuiltDependencies:
+  - esbuild

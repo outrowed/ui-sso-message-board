@@ -1,0 +1,13 @@
+{
+  "name": "ui-sso-message-board",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "setup": "pnpm install",
+    "dev": "pnpm --parallel --filter ./core --filter ./ui run dev",
+    "build": "pnpm --recursive --filter ./core --filter ./ui run build"
+  },
+  "onlyBuiltDependencies": [
+    "esbuild"
+  ]
+}
