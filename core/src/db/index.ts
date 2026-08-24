@@ -19,7 +19,15 @@ sqlite.exec(`
     twitter TEXT,
     youtube TEXT,
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-  )
+  );
+
+  CREATE TABLE IF NOT EXISTS posts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    author_username TEXT NOT NULL,
+    content TEXT NOT NULL,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(author_username) REFERENCES profiles(username)
+  );
 `);
 
 export const db = drizzle({ client: sqlite, schema } as any);
