@@ -49,7 +49,7 @@ The UI development server forwards `/api` requests to the core server. The core 
 
 ### Database
 
-- **Drizzle ORM** for typed queries and schema definitions
+- **Drizzle ORM** for typed queries, schema definitions, and migrations
 - **SQLite** through Node.js's built-in `node:sqlite` driver
 
 ## Requirements
@@ -73,7 +73,7 @@ pnpm dev
 
 Open <http://localhost:5173>. The core API listens on <http://localhost:3001>.
 
-The SQLite database is created automatically at `db/profiles.sqlite` when the core server starts. Its tables are also created automatically, so a separate migration command is not required for a fresh development checkout.
+The SQLite database is created automatically at `db/profiles.sqlite` when the core server starts. Drizzle applies the migrations in `core/drizzle/` during startup, so a separate migration command is not required for a fresh development checkout.
 
 To check both applications without starting them:
 
@@ -105,6 +105,7 @@ The core server reads these environment variables:
 | `CAS_SERVER` | `https://sso.ui.ac.id/cas2` | [Central Authentication Service](https://en.wikipedia.org/wiki/Central_Authentication_Service) (CAS) server base URL |
 | `JWT_SECRET` | Insecure development fallback | Secret used to sign session tokens |
 | `NODE_ENV` | unset | Set to `production` to enable secure cookies |
+| `SQLITE_PATH` | `db/profiles.sqlite` | SQLite database file used by the current adapter |
 
 Set a strong `JWT_SECRET` outside local development. Do not commit environment files or secrets.
 
