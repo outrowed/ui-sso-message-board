@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { XMLParser } from "fast-xml-parser";
 import jwt from "jsonwebtoken";
+import { config } from "../config.js";
 import { repositories } from "../repositories/index.js";
 import { JWT_SECRET, type AuthenticatedRequest } from "../middleware/auth.js";
 
@@ -55,7 +56,7 @@ router.get("/cas/callback", async (req: Request, res: Response) => {
 
       res.cookie("token", token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: config.cookieSecure,
         sameSite: "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000,
         path: "/",
