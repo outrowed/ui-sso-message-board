@@ -81,6 +81,18 @@ To check both applications without starting them:
 pnpm build
 ```
 
+### Testing over plain HTTP
+
+Session cookies are marked `HttpOnly` in every mode, so browser JavaScript cannot read them. In production mode they are also marked `Secure`, which means browsers send them only over HTTPS.
+
+If a development deployment is available only through an HTTP IP address, run the core server in development mode:
+
+```bash
+NODE_ENV=development pnpm dev
+```
+
+Do not set `NODE_ENV=production` for an HTTP-only test. The resulting `Secure` cookie would not be sent over HTTP, and the application would appear logged out after returning from SSO UI. Use HTTPS for public or production deployments.
+
 ## Configuration
 
 The core server reads these environment variables:
