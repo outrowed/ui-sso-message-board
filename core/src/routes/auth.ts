@@ -1,9 +1,7 @@
 import { Router, Request, Response } from "express";
 import { XMLParser } from "fast-xml-parser";
 import jwt from "jsonwebtoken";
-import { db } from "../db/index.js";
-import { profiles } from "../db/schema.js";
-import { eq } from "drizzle-orm";
+import { repositories } from "../repositories/index.js";
 import { JWT_SECRET, type AuthenticatedRequest } from "../middleware/auth.js";
 
 const router = Router();
@@ -49,10 +47,8 @@ router.get("/cas/callback", async (req: Request, res: Response) => {
       const fullname = (attributes["cas:nama"] || attributes["cas:cn"] || username) as string;
 
       // Upsert user profile into the database
-      const [existing] = await db.select().from(profiles).where(eq(profiles.username, username));
-      if (!existing) {
-        await db.insert(profiles).values({ username, fullname });
-      }
+      const existing = await repositories.users.findByUsername(username);
+      if (!existing) await repositories.users.create(username, fullname);
 
       // Issue JWT
       const token = jwt.sign({ username, fullname }, JWT_SECRET, { expiresIn: "7d" });
