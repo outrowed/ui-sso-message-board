@@ -114,7 +114,24 @@ The CAS service URL is derived from `SERVER_URL`:
 ${SERVER_URL}/api/auth/cas/callback
 ```
 
-SSO UI may reject an unregistered service URL, including a localhost callback. A deployed instance needs an HTTPS callback URL accepted by the SSO UI administrators.
+### SSO UI CAS endpoints
+
+SSO UI provides two CAS endpoints with different service-registration policies:
+
+- `https://sso.ui.ac.id/cas2` is the development endpoint and the default used by this project. It currently accepts service URLs on arbitrary domains without an apparent whitelist. RISTEK's [Susun Jadwal](https://susunjadwal.cs.ui.ac.id/) also uses this endpoint for UI account authentication.
+- `https://sso.ui.ac.id/cas` is the production endpoint used by official UI websites. It validates service URLs against a whitelist. Approved services are usually hosted under `ui.ac.id`, but a `ui.ac.id` hostname is not sufficient by itself; each service still needs to be accepted by the production CAS configuration.
+
+Select the endpoint with `CAS_SERVER`:
+
+```bash
+# Development or testing
+CAS_SERVER=https://sso.ui.ac.id/cas2 pnpm dev
+
+# Registered production service
+CAS_SERVER=https://sso.ui.ac.id/cas pnpm dev
+```
+
+The `service` value sent during login must exactly match the value used when validating the returned ticket. For a production deployment, register the callback URL with the relevant UI administrator before switching to the `/cas` endpoint.
 
 ## Main API routes
 
