@@ -257,17 +257,26 @@ function MePage() {
 
 function AppLayout() {
   return (
-    <>
+    <div className={styles.appShell}>
       <Header />
-      <Routes>
-        <Route path="/" element={<Navigate to="/messages" replace />} />
-        <Route path="/messages" element={<MessagesPage />} />
-        <Route path="/users" element={<UsersPage />} />
-        <Route path="/profile/:username" element={<ProfilePage />} />
-        <Route path="/me" element={<MePage />} />
-        <Route path="*" element={<Navigate to="/messages" replace />} />
-      </Routes>
-    </>
+      <div className={styles.mainContent}>
+        <Routes>
+          <Route path="/" element={<Navigate to="/messages" replace />} />
+          <Route path="/messages" element={<MessagesPage />} />
+          <Route path="/users" element={<UsersPage />} />
+          <Route path="/profile/:username" element={<ProfilePage />} />
+          <Route path="/me" element={<MePage />} />
+          <Route path="*" element={<Navigate to="/messages" replace />} />
+        </Routes>
+      </div>
+      <footer className={styles.footer}>
+        <span>Taruna Prasetya</span>
+        <span aria-hidden="true"> · </span>
+        <a href="https://github.com/outrowed/ui-sso-message-board/blob/main/LICENSE" target="_blank" rel="noreferrer">MIT</a>
+        <span aria-hidden="true"> · </span>
+        <a href="https://github.com/outrowed/ui-sso-message-board" target="_blank" rel="noreferrer">View source on GitHub</a>
+      </footer>
+    </div>
   );
 }
 

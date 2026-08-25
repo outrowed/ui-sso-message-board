@@ -1,3 +1,13 @@
+.appShell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.mainContent {
+  flex: 1;
+}
+
 .container {
   max-width: 720px;
   margin: 0 auto;
@@ -246,3 +256,12 @@
 .socialTitle { margin-top: 25px; margin-bottom: 10px; }
 .saveButton { margin-top: 20px; }
 .saved { color: #187a2f; font-weight: bold; margin-bottom: 15px; }
+
+.footer {
+  flex-shrink: 0;
+  padding: 28px 24px;
+  border-top: 1px solid #e0e0e0;
+  text-align: center;
+  color: #666;
+  font-size: 0.9rem;
+}
