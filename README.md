@@ -83,15 +83,15 @@ pnpm build
 
 ### Testing over plain HTTP
 
-Session cookies are marked `HttpOnly` in every mode, so browser JavaScript cannot read them. In production mode they are also marked `Secure`, which means browsers send them only over HTTPS.
+Session cookies are always marked `HttpOnly`, so browser JavaScript cannot read them. Their `Secure` attribute is controlled by `COOKIE_SECURE`. When the variable is omitted, secure cookies are enabled automatically in production mode and disabled otherwise.
 
-If a development deployment is available only through an HTTP IP address, run the core server in development mode:
+For a production-mode deployment available only through plain HTTP, explicitly disable the `Secure` attribute:
 
 ```bash
-NODE_ENV=development pnpm dev
+NODE_ENV=production COOKIE_SECURE=false pnpm dev
 ```
 
-Do not set `NODE_ENV=production` for an HTTP-only test. The resulting `Secure` cookie would not be sent over HTTP, and the application would appear logged out after returning from SSO UI. Use HTTPS for public or production deployments.
+This keeps the cookie `HttpOnly`, but allows the browser to send it over HTTP. Traffic and session tokens remain unencrypted on the network, so use this only for controlled testing. Public production deployments should use HTTPS with `COOKIE_SECURE=true`.
 
 ## Configuration
 
@@ -104,7 +104,8 @@ The core server reads these environment variables:
 | `SERVER_URL` | `http://localhost:3001` | Public core URL used to build the CAS callback URL |
 | `CAS_SERVER` | `https://sso.ui.ac.id/cas2` | [Central Authentication Service](https://en.wikipedia.org/wiki/Central_Authentication_Service) (CAS) server base URL |
 | `JWT_SECRET` | Insecure development fallback | Secret used to sign session tokens |
-| `NODE_ENV` | unset | Set to `production` to enable secure cookies |
+| `NODE_ENV` | unset | Selects the default cookie security behavior |
+| `COOKIE_SECURE` | `true` in production, otherwise `false` | Explicitly enables or disables the cookie `Secure` attribute |
 | `SQLITE_PATH` | `db/profiles.sqlite` | SQLite database file used by the current adapter |
 
 Set a strong `JWT_SECRET` outside local development. Do not commit environment files or secrets.
