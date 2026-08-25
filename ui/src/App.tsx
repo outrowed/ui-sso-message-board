@@ -22,6 +22,13 @@ type Message = {
   authorFullname: string;
 };
 
+function formatLocalTime(timestamp: string) {
+  // SQLite CURRENT_TIMESTAMP is UTC but omits the ISO 8601 timezone suffix.
+  const isoTimestamp = timestamp.includes('T') ? timestamp : timestamp.replace(' ', 'T');
+  const utcTimestamp = /(?:Z|[+-]\d{2}:?\d{2})$/.test(isoTimestamp) ? isoTimestamp : `${isoTimestamp}Z`;
+  return new Date(utcTimestamp).toLocaleString();
+}
+
 function AccountActions() {
   const { user, login, logout } = useAuth();
 
@@ -151,7 +158,7 @@ function MessagesPage() {
             <Link className={styles.postAuthor} to={`/profile/${encodeURIComponent(message.authorUsername)}`}>
               {message.authorFullname}
             </Link>
-            <time>{new Date(message.createdAt).toLocaleString('en-GB')}</time>
+            <time dateTime={`${message.createdAt.replace(' ', 'T')}Z`}>{formatLocalTime(message.createdAt)}</time>
           </div>
           <div className={styles.postContent}>{message.content}</div>
         </article>
