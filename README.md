@@ -102,7 +102,7 @@ The core server reads these environment variables:
 | `PORT` | `3001` | Core API port |
 | `CLIENT_URL` | `http://localhost:5173` | Allowed UI origin and redirect destination |
 | `SERVER_URL` | `http://localhost:3001` | Public core URL used to build the CAS callback URL |
-| `CAS_SERVER` | `https://sso.ui.ac.id/cas2` | CAS server base URL |
+| `CAS_SERVER` | `https://sso.ui.ac.id/cas2` | [Central Authentication Service](https://en.wikipedia.org/wiki/Central_Authentication_Service) (CAS) server base URL |
 | `JWT_SECRET` | Insecure development fallback | Secret used to sign session tokens |
 | `NODE_ENV` | unset | Set to `production` to enable secure cookies |
 
