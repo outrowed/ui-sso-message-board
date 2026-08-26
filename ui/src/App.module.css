@@ -45,6 +45,20 @@
   font-size: 0.95em;
 }
 
+.accountLink { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
+
+.avatar {
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: #dceafb;
+  color: #064f99;
+}
+.avatarFallback { display: inline-flex; align-items: center; justify-content: center; font-weight: 700; }
+.avatarSmall { width: 30px; height: 30px; font-size: 0.7rem; }
+.avatarMedium { width: 42px; height: 42px; font-size: 0.85rem; }
+.avatarLarge { width: 68px; height: 68px; font-size: 1.15rem; }
+
 /* Pill Navigation */
 
 .pillNav {
@@ -176,6 +190,8 @@
 .profileCard {
   transition: box-shadow 0.15s;
 }
+.userCard, .profileHeading { display: flex; align-items: center; gap: 18px; }
+.profileHeading { margin-bottom: 22px; }
 .profileCard:hover {
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
@@ -235,6 +251,9 @@
 }
 
 .postAuthor {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-weight: 600;
   color: #1a1a1a;
 }

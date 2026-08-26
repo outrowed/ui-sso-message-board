@@ -1,11 +1,13 @@
 import { Router, Request, Response } from "express";
+import { avatarUrl } from "../avatars.js";
 import { requireAuth, type AuthenticatedRequest } from "../middleware/auth.js";
 import { repositories } from "../repositories/index.js";
 
 const router = Router();
 
 router.get("/", async (_req: Request, res: Response) => {
-  res.json({ messages: await repositories.messages.list() });
+  const messages = await repositories.messages.list();
+  res.json({ messages: messages.map((message) => ({ ...message, authorAvatarUrl: avatarUrl(message.authorUsername) })) });
 });
 
 router.post("/", requireAuth, async (req: AuthenticatedRequest, res: Response) => {

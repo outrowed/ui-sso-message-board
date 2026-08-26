@@ -12,6 +12,7 @@ type Profile = {
   instagram?: string | null;
   twitter?: string | null;
   youtube?: string | null;
+  avatarUrl?: string | null;
 };
 
 type Message = {
@@ -20,7 +21,14 @@ type Message = {
   createdAt: string;
   authorUsername: string;
   authorFullname: string;
+  authorAvatarUrl?: string | null;
 };
+
+function Avatar({ profile, size = 'medium', preview }: { profile: Pick<Profile, 'fullname' | 'avatarUrl'>; size?: 'small' | 'medium' | 'large'; preview?: string | null }) {
+  const source = preview || profile.avatarUrl;
+  const initials = profile.fullname.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase() || '?';
+  return source ? <img className={`${styles.avatar} ${styles[`avatar${size[0].toUpperCase()}${size.slice(1)}`]}`} src={source} alt={`${profile.fullname}'s avatar`} /> : <span className={`${styles.avatar} ${styles.avatarFallback} ${styles[`avatar${size[0].toUpperCase()}${size.slice(1)}`]}`}>{initials}</span>;
+}
 
 function formatLocalTime(timestamp: string) {
   // SQLite CURRENT_TIMESTAMP is UTC but omits the ISO 8601 timezone suffix.
@@ -31,12 +39,18 @@ function formatLocalTime(timestamp: string) {
 
 function AccountActions() {
   const { user, login, logout } = useAuth();
+  const [profile, setProfile] = useState<Profile | null>(null);
+
+  useEffect(() => {
+    if (!user) { setProfile(null); return; }
+    fetch(`/api/users/${encodeURIComponent(user.username)}`).then((response) => response.json()).then((data) => setProfile(data.user));
+  }, [user]);
 
   return (
     <div className={styles.accountActions}>
       {user ? (
         <>
-          <Link to="/me">{user.fullname}</Link>
+          <Link className={styles.accountLink} to="/me"><Avatar profile={{ fullname: user.fullname, avatarUrl: profile?.avatarUrl }} size="small" /><span>{user.fullname}</span></Link>
           <button className={`${styles.btn} ${styles.btnSecondary}`} onClick={logout}>Logout</button>
         </>
       ) : (
@@ -84,10 +98,9 @@ function UsersPage() {
       </form>
 
       {users.length ? users.map((user) => (
-        <article className={`${styles.card} ${styles.profileCard}`} key={user.username}>
-          <h2><Link to={`/profile/${encodeURIComponent(user.username)}`}>{user.fullname}</Link></h2>
-          <p>@{user.username}</p>
-          {user.interests && <p><strong>Interests:</strong> {user.interests}</p>}
+        <article className={`${styles.card} ${styles.profileCard} ${styles.userCard}`} key={user.username}>
+          <Avatar profile={user} size="large" />
+          <div><h2><Link to={`/profile/${encodeURIComponent(user.username)}`}>{user.fullname}</Link></h2><p>@{user.username}</p>{user.interests && <p><strong>Interests:</strong> {user.interests}</p>}</div>
         </article>
       )) : <p>No users found.</p>}
     </main>
@@ -156,7 +169,8 @@ function MessagesPage() {
         <article className={styles.postCard} key={message.id}>
           <div className={styles.postHeader}>
             <Link className={styles.postAuthor} to={`/profile/${encodeURIComponent(message.authorUsername)}`}>
-              {message.authorFullname}
+              <Avatar profile={{ fullname: message.authorFullname, avatarUrl: message.authorAvatarUrl }} size="small" />
+              <span>{message.authorFullname}</span>
             </Link>
             <time dateTime={`${message.createdAt.replace(' ', 'T')}Z`}>{formatLocalTime(message.createdAt)}</time>
           </div>
@@ -190,8 +204,7 @@ function ProfilePage() {
     <main className={styles.container}>
       <p className={styles.backLink}><Link to="/users">← Back to users</Link></p>
       <article className={styles.card}>
-        <h1>{profile.fullname}</h1>
-        <p className={styles.muted}>@{profile.username}</p>
+        <div className={styles.profileHeading}><Avatar profile={profile} size="large" /><div><h1>{profile.fullname}</h1><p className={styles.muted}>@{profile.username}</p></div></div>
         <div className={styles.formGroup}><strong className={styles.infoLabel}>Interests</strong><div>{profile.interests || <em>Not specified</em>}</div></div>
         <div className={styles.formGroup}><strong className={styles.infoLabel}>Likes</strong><div>{profile.likes || <em>Not specified</em>}</div></div>
         <div className={styles.formGroup}><strong className={styles.infoLabel}>Dislikes</strong><div>{profile.dislikes || <em>Not specified</em>}</div></div>
@@ -208,6 +221,8 @@ function ProfilePage() {
 function MePage() {
   const { user, login, loading } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [avatar, setAvatar] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
@@ -224,13 +239,27 @@ function MePage() {
   );
   if (!profile) return <main className={styles.container}>Loading…</main>;
 
+  const chooseAvatar = (file: File | undefined) => {
+    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+    setAvatar(file || null);
+    setAvatarPreview(file ? URL.createObjectURL(file) : null);
+  };
+
   const submit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const fields = Object.fromEntries(new FormData(event.currentTarget));
-    fetch('/api/users/me', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(fields) })
+    const values = Object.fromEntries(new FormData(event.currentTarget));
+    delete values.avatar;
+    const payload = new FormData();
+    payload.set('profile', JSON.stringify(values));
+    if (avatar) payload.set('avatar', avatar);
+
+    fetch('/api/users/me', { method: 'PUT', body: payload })
       .then((response) => response.json())
       .then((data) => {
         setProfile(data.user);
+        setAvatar(null);
+        if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+        setAvatarPreview(null);
         setSaved(true);
         setTimeout(() => setSaved(false), 3000);
       });
@@ -245,9 +274,10 @@ function MePage() {
 
   return (
     <main className={styles.container}>
-      <h1>My profile</h1>
+      <div className={styles.profileHeading}><Avatar profile={profile} size="large" preview={avatarPreview} /><h1>My profile</h1></div>
       {saved && <p className={styles.saved}>✓ Profile saved.</p>}
       <form onSubmit={submit} className={styles.card}>
+        <div className={styles.formGroup}><label>Profile picture</label><input type="file" name="avatar" accept="image/*" onChange={(event) => chooseAvatar(event.target.files?.[0])} /><small>The selected image is previewed locally and uploaded only when you save the profile.</small></div>
         {field('fullname', 'Full name')}
         {field('interests', 'Interests')}
         {field('likes', 'Likes', true)}
