@@ -4,6 +4,17 @@ import type { User } from "./domain/user.js";
 
 export type ProfileSource = "local" | "pmb.cs.ui.ac.id";
 
+const PMB_MAJOR_NAMES: Record<string, string> = {
+  ik: "Ilmu Komputer",
+  si: "Sistem Informasi",
+  ka: "Kecerdasan Buatan",
+};
+
+export function pmbMajorName(code?: string | null): string | null {
+  if (!code) return null;
+  return PMB_MAJOR_NAMES[code.toLowerCase()] || code;
+}
+
 interface PmbInterest {
   interest?: { nama_interest?: string };
 }
@@ -65,7 +76,7 @@ export async function publicProfile(user: User): Promise<PublicProfile> {
     birthplace: pmb.tempat_lahir,
     birthdate: pmb.tanggal_lahir,
     gender: pmb.jenis_kelamin,
-    major: pmb.jurusan,
+    major: pmbMajorName(pmb.jurusan),
     cohort: pmb.angkatan,
     school: pmb.asal_sekolah,
     line: pmb.id_line,
