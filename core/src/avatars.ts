@@ -16,10 +16,14 @@ export async function saveAvatar(username: string, image: Buffer): Promise<void>
   const temporary = `${destination}.tmp`;
 
   try {
-    await sharp(image)
+    const metadata = await sharp(image, { animated: true }).metadata();
+    const processor = sharp(image, { animated: true })
       .rotate()
-      .resize(512, 512, { fit: "cover" })
-      .webp({ quality: 85 })
+      .resize(512, 512, { fit: "cover" });
+
+    await (metadata.pages && metadata.pages > 1
+      ? processor.webp({ quality: 85, loop: metadata.loop ?? 0 })
+      : processor.webp({ quality: 85 }))
       .toFile(temporary);
     await rename(temporary, destination);
   } catch (error) {
