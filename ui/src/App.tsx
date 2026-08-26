@@ -13,6 +13,18 @@ type Profile = {
   twitter?: string | null;
   youtube?: string | null;
   avatarUrl?: string | null;
+  profileSource?: 'local' | 'pmb.cs.ui.ac.id';
+  profileReadOnly?: boolean;
+  nickname?: string | null;
+  birthplace?: string | null;
+  birthdate?: string | null;
+  gender?: string | null;
+  major?: string | null;
+  cohort?: string | null;
+  school?: string | null;
+  line?: string | null;
+  bio?: string | null;
+  domicile?: string | null;
 };
 
 type Message = {
@@ -205,6 +217,13 @@ function ProfilePage() {
       <p className={styles.backLink}><Link to="/users">← Back to users</Link></p>
       <article className={styles.card}>
         <div className={styles.profileHeading}><Avatar profile={profile} size="large" /><div><h1>{profile.fullname}</h1><p className={styles.muted}>@{profile.username}</p></div></div>
+        {profile.profileSource === 'pmb.cs.ui.ac.id' && <p className={styles.sourceNotice}>Profile data provided by <a href="https://pmb.cs.ui.ac.id" target="_blank" rel="noreferrer">pmb.cs.ui.ac.id</a>.</p>}
+        {profile.nickname && <div className={styles.formGroup}><strong className={styles.infoLabel}>Nickname</strong><div>{profile.nickname}</div></div>}
+        {profile.bio && <div className={styles.formGroup}><strong className={styles.infoLabel}>Bio</strong><div>{profile.bio}</div></div>}
+        {profile.major && <div className={styles.formGroup}><strong className={styles.infoLabel}>Major</strong><div>{profile.major}{profile.cohort ? ` · ${profile.cohort}` : ''}</div></div>}
+        {profile.school && <div className={styles.formGroup}><strong className={styles.infoLabel}>School</strong><div>{profile.school}</div></div>}
+        {profile.domicile && <div className={styles.formGroup}><strong className={styles.infoLabel}>Domicile</strong><div>{profile.domicile}</div></div>}
+        {profile.line && <div className={styles.formGroup}><strong className={styles.infoLabel}>LINE</strong><div>{profile.line}</div></div>}
         <div className={styles.formGroup}><strong className={styles.infoLabel}>Interests</strong><div>{profile.interests || <em>Not specified</em>}</div></div>
         <div className={styles.formGroup}><strong className={styles.infoLabel}>Likes</strong><div>{profile.likes || <em>Not specified</em>}</div></div>
         <div className={styles.formGroup}><strong className={styles.infoLabel}>Dislikes</strong><div>{profile.dislikes || <em>Not specified</em>}</div></div>
@@ -238,6 +257,15 @@ function MePage() {
     </main>
   );
   if (!profile) return <main className={styles.container}>Loading…</main>;
+  if (profile.profileReadOnly) return (
+    <main className={styles.container}>
+      <div className={styles.profileHeading}><Avatar profile={profile} size="large" /><h1>My profile</h1></div>
+      <article className={styles.card}>
+        <p className={styles.sourceNotice}>Your profile is managed by and loaded from <a href="https://pmb.cs.ui.ac.id" target="_blank" rel="noreferrer">pmb.cs.ui.ac.id</a>. Local profile editing and avatar uploads are disabled by the server.</p>
+        <Link to={`/profile/${encodeURIComponent(profile.username)}`}>View your public profile</Link>
+      </article>
+    </main>
+  );
 
   const chooseAvatar = (file: File | undefined) => {
     if (avatarPreview) URL.revokeObjectURL(avatarPreview);
@@ -265,12 +293,13 @@ function MePage() {
       });
   };
 
-  const field = (name: keyof Profile, label: string, multiline = false) => (
-    <div className={styles.formGroup}>
+  const field = (name: 'fullname' | 'interests' | 'likes' | 'dislikes' | 'instagram' | 'twitter' | 'youtube', label: string, multiline = false) => {
+    const value = profile[name] || '';
+    return <div className={styles.formGroup}>
       <label>{label}</label>
-      {multiline ? <textarea name={name} defaultValue={profile[name] || ''} rows={3} /> : <input name={name} defaultValue={profile[name] || ''} />}
-    </div>
-  );
+      {multiline ? <textarea name={name} defaultValue={value} rows={3} /> : <input name={name} defaultValue={value} />}
+    </div>;
+  };
 
   return (
     <main className={styles.container}>

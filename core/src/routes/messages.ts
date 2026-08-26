@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { avatarUrl } from "../avatars.js";
+import { publicProfile } from "../profiles.js";
 import { requireAuth, type AuthenticatedRequest } from "../middleware/auth.js";
 import { repositories } from "../repositories/index.js";
 
@@ -7,7 +7,22 @@ const router = Router();
 
 router.get("/", async (_req: Request, res: Response) => {
   const messages = await repositories.messages.list();
-  res.json({ messages: messages.map((message) => ({ ...message, authorAvatarUrl: avatarUrl(message.authorUsername) })) });
+  const authors = new Map<string, Awaited<ReturnType<typeof publicProfile>>>();
+  try {
+    await Promise.all(messages.map(async (message) => {
+      if (!authors.has(message.authorUsername)) {
+        const user = await repositories.users.findByUsername(message.authorUsername);
+        if (user) authors.set(message.authorUsername, await publicProfile(user));
+      }
+    }));
+    res.json({ messages: messages.map((message) => {
+      const author = authors.get(message.authorUsername);
+      return { ...message, authorFullname: author?.fullname || message.authorFullname, authorAvatarUrl: author?.avatarUrl || null };
+    }) });
+  } catch (error) {
+    console.error("PMB profile lookup error:", error);
+    res.status(502).json({ error: "Failed to load message authors from pmb.cs.ui.ac.id" });
+  }
 });
 
 router.post("/", requireAuth, async (req: AuthenticatedRequest, res: Response) => {

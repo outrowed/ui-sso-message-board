@@ -107,8 +107,21 @@ The core server reads these environment variables:
 | `NODE_ENV` | unset | Selects the default cookie security behavior |
 | `COOKIE_SECURE` | `true` in production, otherwise `false` | Explicitly enables or disables the cookie `Secure` attribute |
 | `SQLITE_PATH` | `db/profiles.sqlite` | SQLite database file used by the current adapter |
+| `PMB_PROFILES_ENABLED` | `false` | Uses read-only profiles from `pmb.cs.ui.ac.id` instead of locally editable profiles |
+| `PMB_API_TOKEN` | unset | JWT token required when PMB profiles are enabled; sent as `Authorization: JWT <token>` |
+| `PMB_API_BASE_URL` | `https://api.pmb.cs.ui.ac.id` | PMB profile API origin; primarily configurable for testing |
 
 Set a strong `JWT_SECRET` outside local development. Do not commit environment files or secrets.
+
+### PMB profile source
+
+Local profiles are used by default. A server operator can instead enable the richer, read-only profile data provided by [pmb.cs.ui.ac.id](https://pmb.cs.ui.ac.id):
+
+```bash
+PMB_PROFILES_ENABLED=true PMB_API_TOKEN='<token>' pnpm dev
+```
+
+When enabled, the core server requests `https://api.pmb.cs.ui.ac.id/api/profile/<username>` using `Authorization: JWT <token>`. The username comes from the authenticated SSO UI account. Public profile pages clearly identify `pmb.cs.ui.ac.id` as their data source, while `/me` explains that editing and local avatar uploads are disabled. The application refuses to start with PMB profiles enabled unless `PMB_API_TOKEN` is set.
 
 The CAS service URL is derived from `SERVER_URL`:
 
