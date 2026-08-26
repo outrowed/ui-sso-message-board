@@ -16,7 +16,7 @@ export function pmbMajorName(code?: string | null): string | null {
 }
 
 interface PmbInterest {
-  interest?: { nama_interest?: string };
+  interest?: { nama_interest?: string; is_it?: boolean };
 }
 
 interface PmbProfileResponse {
@@ -34,6 +34,8 @@ interface PmbProfileResponse {
   bio?: string | null;
   foto_profil?: string | null;
   domicile?: string | null;
+  kelompok_id?: string | null;
+  role?: string | null;
   User_Interest?: PmbInterest[];
 }
 
@@ -51,6 +53,9 @@ export interface PublicProfile extends User {
   line?: string | null;
   bio?: string | null;
   domicile?: string | null;
+  groupId?: string | null;
+  role?: string | null;
+  pmbInterests?: Array<{ name: string; isIt: boolean | null }>;
 }
 
 export async function publicProfile(user: User): Promise<PublicProfile> {
@@ -68,13 +73,17 @@ export async function publicProfile(user: User): Promise<PublicProfile> {
     ...user,
     fullname: pmb.nama_lengkap || user.fullname,
     interests: pmb.User_Interest?.map((entry) => entry.interest?.nama_interest).filter(Boolean).join(", ") || null,
+    likes: null,
+    dislikes: null,
     instagram: pmb.instagram || null,
+    twitter: null,
+    youtube: null,
     avatarUrl: pmb.foto_profil || null,
     profileSource: "pmb.cs.ui.ac.id",
     profileReadOnly: true,
     nickname: pmb.nama_panggilan,
     birthplace: pmb.tempat_lahir,
-    birthdate: pmb.tanggal_lahir,
+    birthdate: null,
     gender: pmb.jenis_kelamin,
     major: pmbMajorName(pmb.jurusan),
     cohort: pmb.angkatan,
@@ -82,5 +91,8 @@ export async function publicProfile(user: User): Promise<PublicProfile> {
     line: pmb.id_line,
     bio: pmb.bio,
     domicile: pmb.domicile,
+    groupId: pmb.kelompok_id,
+    role: pmb.role,
+    pmbInterests: pmb.User_Interest?.flatMap((entry) => entry.interest?.nama_interest ? [{ name: entry.interest.nama_interest, isIt: entry.interest.is_it ?? null }] : []) || [],
   };
 }

@@ -193,6 +193,9 @@
 .userCard, .profileHeading { display: flex; align-items: center; gap: 18px; }
 .profileHeading { margin-bottom: 22px; }
 .sourceNotice { padding: 12px 14px; border-left: 4px solid #0066cc; background: #edf6ff; }
+.interestList { margin: 8px 0 0; padding-left: 22px; }
+.interestList li { margin: 7px 0; }
+.interestType { margin-left: 8px; padding: 2px 7px; border-radius: 999px; background: #e8eef5; font-size: 0.78rem; font-weight: 600; }
 .profileCard:hover {
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }

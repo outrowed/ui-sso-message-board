@@ -25,6 +25,9 @@ type Profile = {
   line?: string | null;
   bio?: string | null;
   domicile?: string | null;
+  groupId?: string | null;
+  role?: string | null;
+  pmbInterests?: Array<{ name: string; isIt: boolean | null }>;
 };
 
 type Message = {
@@ -212,18 +215,33 @@ function ProfilePage() {
     <p><strong>{label}:</strong> {base ? <a target="_blank" rel="noreferrer" href={`${base}${handle.replace('@', '')}`}>{handle}</a> : handle}</p>
   ) : null;
 
+  if (profile.profileSource === 'pmb.cs.ui.ac.id') return (
+    <main className={styles.container}>
+      <p className={styles.backLink}><Link to="/users">← Back to users</Link></p>
+      <article className={styles.card}>
+        <div className={styles.profileHeading}><Avatar profile={profile} size="large" /><div><h1>{profile.fullname}</h1><p className={styles.muted}>@{profile.username}</p></div></div>
+        <p className={styles.sourceNotice}>All profile information shown here is provided by <a href="https://pmb.cs.ui.ac.id" target="_blank" rel="noreferrer">pmb.cs.ui.ac.id</a>.</p>
+        {profile.nickname && <div className={styles.formGroup}><strong className={styles.infoLabel}>Nickname</strong><div>{profile.nickname}</div></div>}
+        {profile.bio && <div className={styles.formGroup}><strong className={styles.infoLabel}>Bio</strong><div>{profile.bio}</div></div>}
+        {profile.birthplace && <div className={styles.formGroup}><strong className={styles.infoLabel}>Place of birth</strong><div>{profile.birthplace}</div></div>}
+        {profile.gender && <div className={styles.formGroup}><strong className={styles.infoLabel}>Gender</strong><div>{profile.gender === 'f' ? 'Female' : profile.gender === 'm' ? 'Male' : profile.gender}</div></div>}
+        {profile.major && <div className={styles.formGroup}><strong className={styles.infoLabel}>Major and cohort</strong><div>{profile.major}{profile.cohort ? ` · ${profile.cohort}` : ''}</div></div>}
+        {profile.school && <div className={styles.formGroup}><strong className={styles.infoLabel}>School</strong><div>{profile.school}</div></div>}
+        {profile.domicile && <div className={styles.formGroup}><strong className={styles.infoLabel}>Domicile</strong><div>{profile.domicile}</div></div>}
+        {profile.line && <div className={styles.formGroup}><strong className={styles.infoLabel}>LINE ID</strong><div>{profile.line}</div></div>}
+        {profile.instagram && <div className={styles.formGroup}><strong className={styles.infoLabel}>Instagram</strong><div><a target="_blank" rel="noreferrer" href={`https://instagram.com/${profile.instagram.replace('@', '')}`}>{profile.instagram}</a></div></div>}
+        {profile.groupId && <div className={styles.formGroup}><strong className={styles.infoLabel}>PMB group</strong><div>{profile.groupId}</div></div>}
+        {profile.role && <div className={styles.formGroup}><strong className={styles.infoLabel}>Role</strong><div>{profile.role}</div></div>}
+        <div className={styles.formGroup}><strong className={styles.infoLabel}>Interests</strong>{profile.pmbInterests?.length ? <ul className={styles.interestList}>{profile.pmbInterests.map((interest) => <li key={`${interest.name}-${interest.isIt}`}>{interest.name}{interest.isIt !== null && <span className={styles.interestType}>{interest.isIt ? 'IT' : 'Non-IT'}</span>}</li>)}</ul> : <div><em>Not specified</em></div>}</div>
+      </article>
+    </main>
+  );
+
   return (
     <main className={styles.container}>
       <p className={styles.backLink}><Link to="/users">← Back to users</Link></p>
       <article className={styles.card}>
         <div className={styles.profileHeading}><Avatar profile={profile} size="large" /><div><h1>{profile.fullname}</h1><p className={styles.muted}>@{profile.username}</p></div></div>
-        {profile.profileSource === 'pmb.cs.ui.ac.id' && <p className={styles.sourceNotice}>Profile data provided by <a href="https://pmb.cs.ui.ac.id" target="_blank" rel="noreferrer">pmb.cs.ui.ac.id</a>.</p>}
-        {profile.nickname && <div className={styles.formGroup}><strong className={styles.infoLabel}>Nickname</strong><div>{profile.nickname}</div></div>}
-        {profile.bio && <div className={styles.formGroup}><strong className={styles.infoLabel}>Bio</strong><div>{profile.bio}</div></div>}
-        {profile.major && <div className={styles.formGroup}><strong className={styles.infoLabel}>Major</strong><div>{profile.major}{profile.cohort ? ` · ${profile.cohort}` : ''}</div></div>}
-        {profile.school && <div className={styles.formGroup}><strong className={styles.infoLabel}>School</strong><div>{profile.school}</div></div>}
-        {profile.domicile && <div className={styles.formGroup}><strong className={styles.infoLabel}>Domicile</strong><div>{profile.domicile}</div></div>}
-        {profile.line && <div className={styles.formGroup}><strong className={styles.infoLabel}>LINE</strong><div>{profile.line}</div></div>}
         <div className={styles.formGroup}><strong className={styles.infoLabel}>Interests</strong><div>{profile.interests || <em>Not specified</em>}</div></div>
         <div className={styles.formGroup}><strong className={styles.infoLabel}>Likes</strong><div>{profile.likes || <em>Not specified</em>}</div></div>
         <div className={styles.formGroup}><strong className={styles.infoLabel}>Dislikes</strong><div>{profile.dislikes || <em>Not specified</em>}</div></div>
