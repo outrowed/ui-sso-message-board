@@ -15,6 +15,17 @@ export function pmbMajorName(code?: string | null): string | null {
   return PMB_MAJOR_NAMES[code.toLowerCase()] || code;
 }
 
+function titleCase(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+export function pmbGroupName(groupId?: string | null): string | null {
+  if (!groupId) return null;
+  const [house, ...groupParts] = groupId.split("-").filter(Boolean);
+  if (!house || groupParts.length === 0) return groupId;
+  return `House of ${titleCase(house)} / Group ${titleCase(groupParts.join("-"))}`;
+}
+
 interface PmbInterest {
   interest?: { nama_interest?: string; is_it?: boolean };
 }
@@ -91,7 +102,7 @@ export async function publicProfile(user: User): Promise<PublicProfile> {
     line: pmb.id_line,
     bio: pmb.bio,
     domicile: pmb.domicile,
-    groupId: pmb.kelompok_id,
+    groupId: pmbGroupName(pmb.kelompok_id),
     role: pmb.role,
     pmbInterests: pmb.User_Interest?.flatMap((entry) => entry.interest?.nama_interest ? [{ name: entry.interest.nama_interest, isIt: entry.interest.is_it ?? null }] : []) || [],
   };
